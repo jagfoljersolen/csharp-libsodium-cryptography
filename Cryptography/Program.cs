@@ -1,4 +1,7 @@
-﻿using Cryptography.Crypto;
+﻿using System.Data.SqlTypes;
+using System.Text;
+using Cryptography.Crypto;
+using Cryptography.PKI;
 
 ICryptoService cryptoService = new CryptoService();
 string message = "Hello Bob symmetric!";
@@ -39,3 +42,33 @@ var encryptedFilePath = cryptoService.EncryptFileSecretStream(filepath, bobKeys.
 Console.WriteLine("Ścieżka zaszyfrowanego pliku: " + encryptedFilePath);
 var decryptedFilePath = cryptoService.DecryptFileSecretStream(encryptedFilePath, aliceKeys.PublicKey, bobKeys.PrivateKey);
 Console.WriteLine("Ścieżka odszyfrowanego pliku: " + decryptedFilePath);
+
+
+// PODPISYWANIE I WERYFIKACJA DANYCH
+var pkiService = new PKIService();
+
+using var signerKeys = pkiService.GenerateSigningKeyPair();
+using var otherKeys = pkiService.GenerateSigningKeyPair();
+
+byte[] data = Encoding.UTF8.GetBytes("Wiadomość do podpisania");
+byte[] signature = pkiService.SignData(data, signerKeys.PrivateKey);
+
+// poprawny podpis, oczekiwane True
+bool ok = pkiService.VerifySignature(data, signature, signerKeys.PublicKey);
+Console.WriteLine($"Poprawny podpis: {ok}");
+
+// zmienione dane, oczekiwane False
+byte[] temperedData = (byte[])data.Clone();
+temperedData[0] ^= 0x01;
+bool temperedDataResult = pkiService.VerifySignature(temperedData, signature, signerKeys.PublicKey);
+Console.WriteLine($"Zmienione dane: {temperedDataResult}");
+
+/// Zmieniony podpis, oczekiwane: False
+byte[] tamperedSignature = (byte[])signature.Clone();
+tamperedSignature[0] ^= 0x01;
+bool tamperedSigResult = pkiService.VerifySignature(data, tamperedSignature, signerKeys.PublicKey);
+Console.WriteLine($"Zmieniony podpis: {tamperedSigResult}");
+
+// Klucz publiczny innej osoby, oczekiwane: False
+bool wrongKeyResult = pkiService.VerifySignature(data, signature, otherKeys.PublicKey);
+Console.WriteLine($"Zły klucz publiczny: {wrongKeyResult}");

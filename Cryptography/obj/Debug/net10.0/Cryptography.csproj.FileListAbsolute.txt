@@ -31,3 +31,4 @@
 /home/jagfoljersolen/Mechanizmy Bezpieczenstwa Komputerowego/Lab3/Cryptography/obj/Debug/net10.0/Cryptography.genruntimeconfig.cache
 /home/jagfoljersolen/Mechanizmy Bezpieczenstwa Komputerowego/Lab3/Cryptography/obj/Debug/net10.0/ref/Cryptography.dll
 /home/jagfoljersolen/Mechanizmy Bezpieczenstwa Komputerowego/Lab3/Cryptography/bin/Debug/net10.0/Crypto/Resources/dane.txt
+/home/jagfoljersolen/Mechanizmy Bezpieczenstwa Komputerowego/Lab3/Cryptography/obj/Debug/net10.0/Cryptography.sourcelink.json
