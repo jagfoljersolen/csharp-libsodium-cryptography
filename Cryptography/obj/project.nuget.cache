@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "kkVLcOnpkf8=",
+  "success": true,
+  "projectFilePath": "/home/jagfoljersolen/Mechanizmy Bezpieczenstwa Komputerowego/Lab3/Cryptography/Cryptography.csproj",
+  "expectedPackageFiles": [
+    "/home/jagfoljersolen/.nuget/packages/libsodium/1.0.20.1/libsodium.1.0.20.1.nupkg.sha512",
+    "/home/jagfoljersolen/.nuget/packages/libsodium.net/0.16.0-alpha/libsodium.net.0.16.0-alpha.nupkg.sha512"
+  ],
+  "logs": []
+}
