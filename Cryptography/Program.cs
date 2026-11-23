@@ -83,7 +83,7 @@ var valid = certificateAuthorityService.VerifyCertificate(certificate);
 Console.WriteLine($"Czy podpis jest poprawny? {valid}");
 aliceKeys.Dispose();
 
-// LISTA UNIEWAŻNIEŃ (CRL)
+// LISTA UNIEWAŻNIEŃ (CRL) I EKSPORT/IMPORT
 var pkiService2 = new PKIService();
 using var ca = new CertificateAuthorityService(pkiService2);
 
@@ -93,11 +93,16 @@ using var bobCertKeys = pkiService2.GenerateSigningKeyPair();
 var aliceCert = ca.GenerateCertificate("Alice", aliceCertKeys.PublicKey);
 var bobCert = ca.GenerateCertificate("Bob", bobCertKeys.PublicKey);
 
-Console.WriteLine($"Alice przed unieważnieniem: {ca.VerifyCertificate(aliceCert)}"); 
-Console.WriteLine($"Bob przed unieważnieniem:   {ca.VerifyCertificate(bobCert)}");  
+// eksport / import
+ca.ExportToPem(aliceCert, "alice.pem");
+var imported = ca.ImportFromPem("alice.pem");
+Console.WriteLine($"Podpis po imporcie poprawny: {ca.VerifyCertificate(imported)}");
+
+// CRL
+Console.WriteLine($"Alice przed unieważnieniem: {ca.VerifyCertificate(aliceCert)}");
+Console.WriteLine($"Bob przed unieważnieniem:   {ca.VerifyCertificate(bobCert)}");
 
 ca.RevokeCertificate(aliceCert.SerialNumber);
-Console.WriteLine($"Czy Alice unieważniona:     {ca.IsRevoked(aliceCert.SerialNumber)}"); 
-
-Console.WriteLine($"Alice po unieważnieniu:     {ca.VerifyCertificate(aliceCert)}"); 
-Console.WriteLine($"Bob po unieważnieniu Alice: {ca.VerifyCertificate(bobCert)}");  
+Console.WriteLine($"Czy Alice unieważniona:     {ca.IsRevoked(aliceCert.SerialNumber)}");
+Console.WriteLine($"Alice po unieważnieniu:     {ca.VerifyCertificate(aliceCert)}");
+Console.WriteLine($"Bob po unieważnieniu Alice: {ca.VerifyCertificate(bobCert)}");
