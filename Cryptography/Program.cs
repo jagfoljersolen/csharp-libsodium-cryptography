@@ -1,7 +1,8 @@
-﻿using System.Data.SqlTypes;
-using System.Text;
+﻿using System.Text;
 using Cryptography.Crypto;
 using Cryptography.PKI;
+using Cryptography.PKI.Services;
+
 
 ICryptoService cryptoService = new CryptoService();
 string message = "Hello Bob symmetric!";
@@ -53,22 +54,50 @@ using var otherKeys = pkiService.GenerateSigningKeyPair();
 byte[] data = Encoding.UTF8.GetBytes("Wiadomość do podpisania");
 byte[] signature = pkiService.SignData(data, signerKeys.PrivateKey);
 
-// poprawny podpis, oczekiwane True
 bool ok = pkiService.VerifySignature(data, signature, signerKeys.PublicKey);
 Console.WriteLine($"Poprawny podpis: {ok}");
 
-// zmienione dane, oczekiwane False
 byte[] temperedData = (byte[])data.Clone();
 temperedData[0] ^= 0x01;
 bool temperedDataResult = pkiService.VerifySignature(temperedData, signature, signerKeys.PublicKey);
 Console.WriteLine($"Zmienione dane: {temperedDataResult}");
 
-/// Zmieniony podpis, oczekiwane: False
 byte[] tamperedSignature = (byte[])signature.Clone();
 tamperedSignature[0] ^= 0x01;
 bool tamperedSigResult = pkiService.VerifySignature(data, tamperedSignature, signerKeys.PublicKey);
 Console.WriteLine($"Zmieniony podpis: {tamperedSigResult}");
 
-// Klucz publiczny innej osoby, oczekiwane: False
 bool wrongKeyResult = pkiService.VerifySignature(data, signature, otherKeys.PublicKey);
 Console.WriteLine($"Zły klucz publiczny: {wrongKeyResult}");
+
+
+// Symulacja PKI
+using var certificateAuthorityService = new CertificateAuthorityService(pkiService);
+
+Console.WriteLine(certificateAuthorityService.RootCertificate.PrettyPrint());
+
+var certificate = certificateAuthorityService.GenerateCertificate("Alice", aliceKeys.PublicKey);
+Console.WriteLine("Issued Certificate:");
+Console.WriteLine(certificate.PrettyPrint());
+var valid = certificateAuthorityService.VerifyCertificate(certificate);
+Console.WriteLine($"Czy podpis jest poprawny? {valid}");
+aliceKeys.Dispose();
+
+// LISTA UNIEWAŻNIEŃ (CRL)
+var pkiService2 = new PKIService();
+using var ca = new CertificateAuthorityService(pkiService2);
+
+using var aliceCertKeys = pkiService2.GenerateSigningKeyPair();
+using var bobCertKeys = pkiService2.GenerateSigningKeyPair();
+
+var aliceCert = ca.GenerateCertificate("Alice", aliceCertKeys.PublicKey);
+var bobCert = ca.GenerateCertificate("Bob", bobCertKeys.PublicKey);
+
+Console.WriteLine($"Alice przed unieważnieniem: {ca.VerifyCertificate(aliceCert)}"); 
+Console.WriteLine($"Bob przed unieważnieniem:   {ca.VerifyCertificate(bobCert)}");  
+
+ca.RevokeCertificate(aliceCert.SerialNumber);
+Console.WriteLine($"Czy Alice unieważniona:     {ca.IsRevoked(aliceCert.SerialNumber)}"); 
+
+Console.WriteLine($"Alice po unieważnieniu:     {ca.VerifyCertificate(aliceCert)}"); 
+Console.WriteLine($"Bob po unieważnieniu Alice: {ca.VerifyCertificate(bobCert)}");  
